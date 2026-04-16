@@ -1,13 +1,13 @@
 public class AdminAulasUnlam{
 	//constantes
-	private static final int MAX_AULAS=10;
+	public static final int MAX_AULAS=10;
 	//atributos
 	private Aula[]aulas=new Aula[MAX_AULAS];
 	private int cantidadAulas=0;
 	private int[]indexAulasEliminadas=new int[MAX_AULAS];
 	private int cantidadAulasEliminadas=0;
 	//metodos internos
-	public int buscarIndexAula(int id){
+	private int buscarIndexAula(int id){
 		int tope=cantidadAulas+cantidadAulasEliminadas;
 		Aula aula;
 		for(int i=0;i<tope;i++){
@@ -19,20 +19,29 @@ public class AdminAulasUnlam{
 		return -1;
 	}
 	//metodos externos para validacion de datos
-	public boolean hayAulas(){
-		return cantidadAulas>0;
-	}
 	public boolean pudedoAgregarAula(){
 		return cantidadAulas<aulas.length;
+	}
+	public boolean hayAulas(){
+		return cantidadAulas>0;
 	}
 	public boolean existeAula(int id){
 		return buscarIndexAula(id)!=-1;
 	}
 	public boolean puedoOcuparAula(int id){
-		return !aulas[buscarIndexAula(id)].estaLlena();
+		return aulas[buscarIndexAula(id)].puedoOcupar();
 	}
-	public int getCantitdadFilas(int id){
-		aulas[buscarIndexAula].
+	public boolean puedoDesocuparAula(int id){
+		return aulas[buscarIndexAula(id)].puedoDesocupar();
+	}
+	public int getCantitdadFilasAula(int id){
+		return aulas[buscarIndexAula(id)].getCantidadFilas();
+	}
+	public int getCantitdadColumnasAula(int id){
+		return aulas[buscarIndexAula(id)].getCantidadColumnas();
+	}
+	public boolean escritorioOcupadoAula(int id,int fila,int columa){
+		return aulas[buscarIndexAula(id)].escritorioOcupado(fila,columa);
 	}
 	//metodos externos para funcionalidades del menu
 	public String[]formatearAulas(){//Listar aulas
@@ -72,11 +81,10 @@ public class AdminAulasUnlam{
 			indexAulasEliminadas[cantidadAulasEliminadas++]=index;
 		}
 	}
-	public int[]ocuparAula(int id){
-		//TODO
-		return null;
+	public int ocuparAula(int id){
+		return aulas[buscarIndexAula(id)].ocuparEscritorio();
 	}
-	public void desocuparAula(int id,int posicion){
-		//TODO
+	public void desocuparAula(int id,int fila, int columna){
+		aulas[buscarIndexAula(id)].desocuparEscritorio(fila,columna);
 	}
 }

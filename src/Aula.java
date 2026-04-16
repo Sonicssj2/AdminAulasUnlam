@@ -1,81 +1,84 @@
 public class Aula{
+	//constantes
+	public static final int MAX_FILAS=100;
+	public static final int MAX_COLUMNAS=100;
 	//atributos
 	private int id;
-	private boolean[][]escritorios;
+	private boolean[][]escritorios=new boolean[MAX_FILAS][MAX_COLUMNAS];
 	private int cantidadFilas;
 	private int cantidadColumnas;
 	private int escritoriosOcupados=0;
-	private int[]posicionesRetornadas;
+	private int[]posicionesRetornadas=new int[MAX_FILAS*MAX_COLUMNAS];
 	private int escritoriosRetornados=0;
 	//constructor
-	Aula(int id,int cantidadFilas,int cantidadColumnas){
-		this.id=id;
-		this.cantidadFilas=cantidadFilas;
-		this.cantidadColumnas=cantidadColumnas;
-		escritorios=new boolean[cantidadFilas][cantidadColumnas];
-		posicionesRetornadas=new int[cantidadFilas*cantidadColumnas];
+	public Aula(int newId,int newCantidadFilas,int newCantidadColumnas){
+		id=newId;
+		cantidadFilas=newCantidadFilas;
+		cantidadColumnas=newCantidadColumnas;
+		for(int i=0;i<cantidadFilas;i++){
+			for(int j=0;j<cantidadColumnas;j++){
+				escritorios[i][j]=false;
+				posicionesRetornadas[i*cantidadFilas+j]=0;
+			}
+		}
 	}
 	//getters
 	public int getId(){
 		return id;
 	}
-	//otros metodos
-	public boolean estaLlena(){
-		return escritoriosOcupados==cantidadFilas*cantidadColumnas;
+	public int getCantidadFilas(){
+		return cantidadFilas;
 	}
-	public int[]ocuparEscritorio(){
-		int[]posicionOcupar={-1,-1};
-		int i,j,pos;
-		//si no hay espacio
-		if(estaLlena()){
-			System.out.println("No se ocupó un escritorio: El aula esta llena!");
-			return posicionOcupar;
-		}
+	public int getCantidadColumnas(){
+		return cantidadColumnas;
+	}
+	//metodos externos para validacion de datos
+	public boolean puedoOcupar(){
+		return escritoriosOcupados<posicionesRetornadas.length;
+	}
+	public boolean puedoDesocupar(){
+		return escritoriosOcupados>0;
+	}
+	public boolean escritorioOcupado(int fila,int columna){
+		return escritorios[fila][columna];
+	}
+	//metodos externos para funcionalidades del menu
+	public int ocuparEscritorio(){
+		int i,j,posicion;
 		//si hay escritorios retornados
 		if(escritoriosRetornados>0){
 			//la posicion es la ultima retornada
-			pos=posicionesRetornadas[--escritoriosRetornados];
+			posicion=posicionesRetornadas[--escritoriosRetornados];
 		}
 		//sino
 		else{
 			//la posicion es la siguente en fila/columna
-			pos=escritoriosOcupados;
+			posicion=escritoriosOcupados;
 		}
 		//calcular indices
-		i=pos/cantidadFilas;
-		j=pos%cantidadFilas;
+		i=posicion/cantidadFilas;
+		j=posicion%cantidadFilas;
 		//ocupar
 		escritorios[i][j]=true;
 		escritoriosOcupados++;
-		posicionOcupar[0]=i;
-		posicionOcupar[1]=j;
 		//retorno
-		System.out.println("Se ocupó un escritorio correctamente.");
-		return posicionOcupar;
+		return posicion;
 	}
-	public boolean desocuparEscritorio(int fila,int columna){
-		int pos;
-		//si ya estaba desocupado
-		if(!escritorios[fila][columna]){
-			System.out.println("No se desocupo el escritorio: Ya estaba desocupado!");
-			return false;
-		}
+	public void desocuparEscritorio(int fila,int columna){
+		int posicion;
 		//desocupo
 		escritorios[fila][columna]=false;
 		escritoriosOcupados--;
 		//si la posicion desocupada no es la ultima, la guardo
-		pos=fila*cantidadFilas+columna;
-		if(pos!=escritoriosOcupados){
+		posicion=fila*cantidadFilas+columna;
+		if(posicion!=escritoriosOcupados){
 			posicionesRetornadas[escritoriosRetornados++]=fila*cantidadFilas+columna;
 		}
-		//retorno
-		System.out.println("Se desocupo el escritorio correctamente.");
-		return true;
 	}
 	//formato de print
 	@Override
 	public String toString(){
 		return "Id: "+id+", Capacidad: "+cantidadFilas*cantidadColumnas+
-				", Estado: "+((estaLlena())?"Esta llena":"Hay espacio");
+				", Estado: "+((puedoOcupar())?"Hay espacio":"Esta llena");
 	}
 }

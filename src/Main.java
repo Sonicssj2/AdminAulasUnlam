@@ -14,8 +14,8 @@ suponiendo que hay 10 aulas.
 import java.util.Scanner;
 public class Main{
 	//constantes
-	private static final String[]OPCIONES={"Listar aulas","Agregar aula","Estado de aula","Eliminar aula",
-			"Ocupar escritorio","Desocupar escritorio"};
+	private static final int LISTAR_AULAS=1,AGREGAR_AULA=2,ESTADO_AULA=3,ELIMINAR_AULA=4,
+	OCUPAR_ESCRITORIO=5,DESOCUPAR_ESCRITORIO=6,SALIR=0;
 	//atributos
 	private static Scanner teclado=new Scanner(System.in);
 	private static AdminAulasUnlam sistema=new AdminAulasUnlam();
@@ -46,55 +46,95 @@ public class Main{
 		return cancelar;
 	}
 	private static int validarId(int caso){
-		//casos: 1=agregar, 2=ocupar, 3=resto
 		int id;
 		String error;
 		boolean condicion;
+		
 		switch(caso){
-			//si agrego y no hay espacio
-			case 1:
-				condicion=!sistema.pudedoAgregarAula();
-				error="Máximo de aulas alcanzado!";
+		//si agrego una aula y no hay mas espacio
+		case AGREGAR_AULA:
+			condicion=!sistema.pudedoAgregarAula();
+			error="Máximo de aulas alcanzado!";
 			break;
-			//si no agrego y no hay aulas
-			case 2,3:
-				condicion=!sistema.hayAulas();
-				error="No hay aulas cargadas!";
+		//si chequeo estado, elimino, ocupo, o desocupo un aula y no hay aulas cargadas
+		case ESTADO_AULA,ELIMINAR_AULA,OCUPAR_ESCRITORIO,DESOCUPAR_ESCRITORIO:
+			condicion=!sistema.hayAulas();
+			error="No hay aulas cargadas!";
 			break;
-			//entrada incorrecta
-			default:
-				return -1;
+		//si el parametro "caso" esta mal ingresado
+		default:
+			condicion=true;
+			error="Argumento de caso incorrecto!";
 		}
 		//verifico errores segun el switch anterior
 		if(condicion){
 			System.out.println(error);
 			return -1;
 		}
-		//listo aulas
-		listarAulas();
+		//si no chequeo estado listo las aulas
+		if(caso!=ESTADO_AULA){
+			listarAulas();
+		}
 		//indico retorno rapido
 		System.out.println("*Si en algun momento desea cancelar la operación, ingrese un 0(cero)*");
-		switch(caso){
-			case 1:
-				condicion=sistema.existeAula(id);
-			break;
-			case 2:
-				condicion=!sistema.existeAula(id);
-			break;
-			case 3:
-				condicion=!sistema.existeAula(id);
-			break;
-		}
-		//valido id segun switch anterior
-		//mientras que (no agregue Y el id no exista) O (agregue Y el id ya exista)
+		//indico carga de id
 		System.out.print("Ingrese el id(entero>0, no repetible) del aula: ");
+		//no hay error anterior
+		condicion=false;
+		//valido
 		do{
-			id=getInt();
+			//valido dominio de id
+			do{
+				id=getInt();
+			}while(id<0);
 			//retorno rapido
 			if(cancelarOperacion(id)){
 				return 0;
 			}
-		}while(id<0||condicion);
+			//printeo error anterior si hay
+			if(condicion){
+				System.out.println(error);
+			}
+			//valido id segun el caso
+			switch(caso){
+			case AGREGAR_AULA:
+				condicion=sistema.existeAula(id);
+				if(condicion){
+					error="Ya existe un aula con id "+id+"!";
+				}
+				break;
+			case ESTADO_AULA,ELIMINAR_AULA:
+				condicion=!sistema.existeAula(id);
+				if(condicion){
+					error="No se encontró un aula con id "+id+"!";
+				}
+				break;
+			case OCUPAR_ESCRITORIO:
+				condicion=!sistema.existeAula(id);
+				if(condicion){
+					error="No se encontró un aula con id "+id+"!";
+				}
+				else{
+					condicion=!sistema.puedoOcuparAula(id);
+					if(condicion){
+						error="El aula con id "+id+" está llena!";
+					}
+				}
+				break;
+			case DESOCUPAR_ESCRITORIO:
+				condicion=!sistema.existeAula(id);
+				if(condicion){
+					error="No se encontró un aula con id "+id+"!";
+				}
+				else{
+					condicion=!sistema.puedoDesocuparAula(id);
+					if(condicion){
+						error="El aula con id "+id+" está vacía!";
+					}
+				}
+				break;
+			}
+		}while(condicion);
 		//retorno id validada
 		return id;
 	}
@@ -111,10 +151,10 @@ public class Main{
 		//espacio extra
 		System.out.println();
 	}
-	private static void agregarAula(){
+	private static void agregarAula(){//TODO: validar rago fila, validar rango columna
 		int id,cantFilas,cantColumnas;
 		//valido id
-		id=validarId(true);
+		id=validarId(AGREGAR_AULA);
 		if(id<1){
 			return;
 		}
@@ -143,7 +183,7 @@ public class Main{
 	private static void estadoAula(){
 		int id;
 		//valido id
-		id=validarId(false);
+		id=validarId(ESTADO_AULA);
 		if(id<1){
 			return;
 		}
@@ -153,7 +193,7 @@ public class Main{
 	private static void eliminarAula(){
 		int id;
 		//valido id
-		id=validarId(false);
+		id=validarId(ELIMINAR_AULA);
 		if(id<1){
 			return;
 		}
@@ -161,20 +201,27 @@ public class Main{
 		sistema.eliminarAula(id);
 		System.out.println("Se eliminó el aula con id "+id+" correctamente.");
 	}
-	private static int[]ocuparEscritorio(){
-		int id;
+	private static void ocuparEscritorio(){
+		int id,posicion,cantidadFilas,fila,columna;
 		//valido id
-		id=validarId(false);
+		id=validarId(OCUPAR_ESCRITORIO);
 		if(id<1){
-			return null;
+			return;
 		}
+		//obtengo posición ocupada
+		posicion=sistema.ocuparAula(id);
+		//calculo la fila y la columna
+		cantidadFilas=sistema.getCantitdadFilasAula(id);
+		fila=posicion/cantidadFilas;
+		columna=posicion%cantidadFilas;
+		//informo la posición ocupada por fila y columna
 		System.out.println("Se ocupó el aula con id "+id+" correctamente.");
-		return sistema.ocuparAula(id);
+		System.out.println("Su escritorios se encuentra en la fila "+fila+", columna "+columna+".");
 	}
-	private static void desocuparEscritorio(){
+	private static void desocuparEscritorio(){//TODO: validar fila y columna, no desocupar un escritorio desocupado
 		int id,fila,columna;
 		//validar id
-		id=validarId(false);
+		id=validarId(DESOCUPAR_ESCRITORIO);
 		if(id<1){
 			return;
 		}
@@ -184,7 +231,6 @@ public class Main{
 			return;
 		}
 		//valido fila
-		
 		System.out.print("Ingrese fila(entero>0): ");
 		do{
 			fila=getInt();
@@ -205,6 +251,8 @@ public class Main{
 		//agrego
 		}
 	public static void main(String[]args){
+		final String[]OPCIONES={"Listar aulas","Agregar aula","Estado de aula","Eliminar aula",
+				"Ocupar escritorio","Desocupar escritorio"};
 		int opcion;
 		do{
 			//printeo menu
@@ -215,32 +263,32 @@ public class Main{
 			}
 			System.out.println("0.Salir");
 			//discrimino la entrada
-			opcion=getInt();
+			do{
+				opcion=getInt();
+			}while(opcion<SALIR||opcion>OPCIONES.length);
+			//ejecuto segun la entrada
 			switch(opcion){
-				case 1:
+				case LISTAR_AULAS:
 					listarAulas();
 				break;
-				case 2:
+				case AGREGAR_AULA:
 					agregarAula();
 				break;
-				case 3:
+				case ESTADO_AULA:
 					estadoAula();
 				break;
-				case 4:
+				case ELIMINAR_AULA:
 					eliminarAula();
 				break;
-				case 5:
+				case OCUPAR_ESCRITORIO:
 					ocuparEscritorio();
 				break;
-				case 6:
+				case DESOCUPAR_ESCRITORIO:
 					desocuparEscritorio();
 				break;
-				case 0:
+				case SALIR:
 					System.out.print("-FÍN DEL PROGRAMA-");
-				break;
-				default:
-					System.out.println("La opción ingresada es incorrecta!");
 			}
-		}while(opcion!=0);
+		}while(opcion!=SALIR);
 	}
 }
