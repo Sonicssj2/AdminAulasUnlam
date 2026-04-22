@@ -34,13 +34,16 @@ public class AdminAulasUnlam{
 	public boolean puedoDesocuparAula(int id){
 		return aulas[buscarIndexAula(id)].puedoDesocupar();
 	}
-	public int getCantitdadFilasAula(int id){
+	public int getCantidadFilasAula(int id){
 		return aulas[buscarIndexAula(id)].getCantidadFilas();
 	}
-	public int getCantitdadColumnasAula(int id){
+	public boolean filaDesocupableAula(int id,int fila){
+		return aulas[buscarIndexAula(id)].filaDesocupable(fila);
+	}
+	public int getCantidadColumnasAula(int id){
 		return aulas[buscarIndexAula(id)].getCantidadColumnas();
 	}
-	public boolean escritorioOcupadoAula(int id,int fila,int columa){
+	public boolean escritorioDesocupableAula(int id,int fila,int columa){
 		return aulas[buscarIndexAula(id)].escritorioOcupado(fila,columa);
 	}
 	//metodos externos para funcionalidades del menu
@@ -81,10 +84,10 @@ public class AdminAulasUnlam{
 			indexAulasEliminadas[cantidadAulasEliminadas++]=index;
 		}
 	}
-	public int ocuparAula(int id){
+	public int ocuparAula(int id){//Ocupar aula
 		return aulas[buscarIndexAula(id)].ocuparEscritorio();
 	}
-	public void desocuparAula(int id,int fila, int columna){
+	public void desocuparAula(int id,int fila, int columna){//Desocupar aula
 		aulas[buscarIndexAula(id)].desocuparEscritorio(fila,columna);
 	}
 }

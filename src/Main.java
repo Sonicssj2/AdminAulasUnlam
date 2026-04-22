@@ -76,11 +76,9 @@ public class Main{
 			listarAulas();
 		}
 		//indico retorno rapido
-		System.out.println("*Si en algun momento desea cancelar la operación, ingrese un 0(cero)*");
+		System.out.println("***Si en algun momento desea cancelar la operación, ingrese un 0(cero)***");
 		//indico carga de id
-		System.out.print("Ingrese el id(entero>0, no repetible) del aula: ");
-		//no hay error anterior
-		condicion=false;
+		System.out.print("Ingrese el id(entero >= 1 no repetible) del aula: ");
 		//valido
 		do{
 			//valido dominio de id
@@ -90,10 +88,6 @@ public class Main{
 			//retorno rapido
 			if(cancelarOperacion(id)){
 				return 0;
-			}
-			//printeo error anterior si hay
-			if(condicion){
-				System.out.println(error);
 			}
 			//valido id segun el caso
 			switch(caso){
@@ -134,51 +128,124 @@ public class Main{
 				}
 				break;
 			}
+			//indico si hubo error
+			if(condicion){
+				System.out.println(error);
+			}
 		}while(condicion);
 		//retorno id validada
 		return id;
+	}
+	private static int validarFila(int caso,int id){
+		int fila,cantidadFilas;
+		boolean condicion;
+		//obtengo el tope de filas segun el caso
+		switch(caso){
+		case AGREGAR_AULA:
+			cantidadFilas=Aula.MAX_FILAS;
+			break;
+		case DESOCUPAR_ESCRITORIO:
+			cantidadFilas=sistema.getCantidadFilasAula(id);
+			break;
+		default:
+			System.out.println("Argumento de caso incorrecto!");
+			return -1;
+		}
+		//informo carga de fila
+		System.out.print("Ingrese fila(entero entre 1 y "+cantidadFilas+" incluidos): ");
+		//valido
+		do{
+			//valido dominio de fila
+			do{
+				fila=getInt();
+			}while(fila<0||fila>cantidadFilas);
+			//retorno rapido
+			if(cancelarOperacion(fila)){
+				return 0;
+			}
+			//valido segun el caso
+			if(caso==AGREGAR_AULA){
+				return fila;
+			}
+			condicion=!sistema.filaDesocupableAula(id,fila-1);
+			//indico si hubo error
+			if(condicion){
+				System.out.println("La fila ingresada no tiene escritorios desocupalbes!");
+			}
+		}while(condicion);
+		return fila;
+	}
+	private static int validarColumna(int caso,int id,int fila){
+		int columna,cantidadColumnas;
+		boolean condicion;
+		//obtengo el tope de columnas segun el caso
+		switch(caso){
+		case AGREGAR_AULA:
+			cantidadColumnas=Aula.MAX_COLUMNAS;
+			break;
+		case DESOCUPAR_ESCRITORIO:
+			cantidadColumnas=sistema.getCantidadColumnasAula(id);
+			break;
+		default:
+			System.out.println("Argumento de caso incorrecto!");
+			return -1;
+		}
+		//informo carga de columna
+		System.out.print("Ingrese columna(entero entre 1 y "+cantidadColumnas+" incluidos): ");
+		//valido
+		do{
+			//valido dominio de columna
+			do{
+				columna=getInt();
+			}while(columna<0||columna>cantidadColumnas);
+			//retorno rapido
+			if(cancelarOperacion(columna)){
+				return 0;
+			}
+			//valido segun el caso
+			if(caso==AGREGAR_AULA){
+				return columna;
+			}
+			condicion=!sistema.escritorioDesocupableAula(id,fila-1,columna-1);
+			//indico si hubo error
+			if(condicion){
+				System.out.println("El escritorio de fila "+fila+", columna "+columna+", del aula "+id+" ya esta desocupado!");
+			}
+		}while(condicion);
+		return columna;
 	}
 	//metodos menú
 	private static void listarAulas(){
 		//si no hay aulas, retorno
 		if(!sistema.hayAulas()){
+			System.out.println("No hay aulas para listar!");
 			return;
 		}
 		//por cada aula formateada como string, printear
 		for(String aula:sistema.formatearAulas()){
 			System.out.println(aula);
 		}
-		//espacio extra
-		System.out.println();
 	}
-	private static void agregarAula(){//TODO: validar rago fila, validar rango columna
-		int id,cantFilas,cantColumnas;
+	private static void agregarAula(){
+		int id,cantidadFilas,cantidadColumnas;
 		//valido id
 		id=validarId(AGREGAR_AULA);
 		if(id<1){
 			return;
 		}
 		//valido cantidad de filas
-		System.out.print("Ingrese cantidad de filas(entero>0): ");
-		do{
-			cantFilas=getInt();
-			//retorno rapido
-			if(cancelarOperacion(cantFilas)){
-				return;
-			}
-		}while(cantFilas<1);
+		cantidadFilas=validarFila(AGREGAR_AULA,0);
+		if(cantidadFilas<1){
+			return;
+		}
 		//valido cantidad de columnas
-		System.out.print("Ingrese cantidad de columnas(entero>0): ");
-		do{
-			cantColumnas=getInt();
-			//retorno rapido
-			if(cancelarOperacion(cantColumnas)){
-				return;
-			}
-		}while(cantColumnas<1);
+		cantidadColumnas=validarColumna(AGREGAR_AULA,0,0);
+		if(cantidadColumnas<1){
+			return;
+		}
 		//agrego
-		sistema.agregarAula(id,cantFilas,cantColumnas);
-		System.out.print("Se agregó el aula con id "+id+" correctamente.");
+		sistema.agregarAula(id,cantidadFilas,cantidadColumnas);
+		System.out.println("Se agregó el aula con id "+id+" correctamente.");
 	}
 	private static void estadoAula(){
 		int id;
@@ -211,44 +278,35 @@ public class Main{
 		//obtengo posición ocupada
 		posicion=sistema.ocuparAula(id);
 		//calculo la fila y la columna
-		cantidadFilas=sistema.getCantitdadFilasAula(id);
+		cantidadFilas=sistema.getCantidadFilasAula(id);
 		fila=posicion/cantidadFilas;
 		columna=posicion%cantidadFilas;
 		//informo la posición ocupada por fila y columna
 		System.out.println("Se ocupó el aula con id "+id+" correctamente.");
-		System.out.println("Su escritorios se encuentra en la fila "+fila+", columna "+columna+".");
+		System.out.println("Su escritorio se encuentra en la fila "+(fila+1)+", columna "+(columna+1)+".");
 	}
-	private static void desocuparEscritorio(){//TODO: validar fila y columna, no desocupar un escritorio desocupado
+	private static void desocuparEscritorio(){
 		int id,fila,columna;
 		//validar id
 		id=validarId(DESOCUPAR_ESCRITORIO);
 		if(id<1){
 			return;
 		}
-		//si no hay espacio
-		if(!sistema.puedoOcuparAula(id)){
-			System.out.println();
+		//validar fila
+		fila=validarFila(DESOCUPAR_ESCRITORIO,id);
+		if(fila<1){
 			return;
 		}
-		//valido fila
-		System.out.print("Ingrese fila(entero>0): ");
-		do{
-			fila=getInt();
-			//retorno rapido
-			if(cancelarOperacion(fila)){
-				return;
-			}
-		}while(fila<1);
-		//valido columna
-		System.out.print("Ingrese columna(entero>0): ");
-		do{
-			columna=getInt();
-			//retorno rapido
-			if(cancelarOperacion(columna)){
-				return;
-			}
-		}while(columna<1);
-		//agrego
+		//validar columna
+		columna=validarColumna(DESOCUPAR_ESCRITORIO,id,fila);
+		if(columna<1){
+			return;
+		}
+		//desocupo
+		sistema.desocuparAula(id,fila-1,columna-1);
+		//informo la posición desocupada por fila y columna
+		System.out.println("Se desocupó el aula con id "+id+" correctamente.");
+		System.out.println("El escritorio desocupado fué el: fila "+fila+", columna "+columna+".");
 		}
 	public static void main(String[]args){
 		final String[]OPCIONES={"Listar aulas","Agregar aula","Estado de aula","Eliminar aula",
@@ -287,8 +345,12 @@ public class Main{
 					desocuparEscritorio();
 				break;
 				case SALIR:
-					System.out.print("-FÍN DEL PROGRAMA-");
+					System.out.println("-FÍN DEL PROGRAMA-");
 			}
+			for(int i=0;i<50;i++){
+				System.out.print("-");
+			}
+			System.out.println();
 		}while(opcion!=SALIR);
 	}
 }

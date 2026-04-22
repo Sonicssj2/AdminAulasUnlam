@@ -18,7 +18,6 @@ public class Aula{
 		for(int i=0;i<cantidadFilas;i++){
 			for(int j=0;j<cantidadColumnas;j++){
 				escritorios[i][j]=false;
-				posicionesRetornadas[i*cantidadFilas+j]=0;
 			}
 		}
 	}
@@ -32,53 +31,65 @@ public class Aula{
 	public int getCantidadColumnas(){
 		return cantidadColumnas;
 	}
+	//metodos internos
+	private int escritoriosReales(){
+		return escritoriosOcupados-escritoriosRetornados;
+	}
 	//metodos externos para validacion de datos
 	public boolean puedoOcupar(){
-		return escritoriosOcupados<posicionesRetornadas.length;
+		return escritoriosReales()<posicionesRetornadas.length;
 	}
 	public boolean puedoDesocupar(){
-		return escritoriosOcupados>0;
+		return escritoriosReales()>0;
+	}
+	public boolean filaDesocupable(int fila){
+		for(int j=0;j<cantidadColumnas;j++){
+			if(escritorios[fila][j]){
+				return true;
+			}
+		}
+		return false;
 	}
 	public boolean escritorioOcupado(int fila,int columna){
 		return escritorios[fila][columna];
 	}
 	//metodos externos para funcionalidades del menu
-	public int ocuparEscritorio(){
+	public int ocuparEscritorio(){//Ocupar Aula
 		int i,j,posicion;
-		//si hay escritorios retornados
+		//si hay escritorios retornados, la posicion es la ultima retornada
 		if(escritoriosRetornados>0){
-			//la posicion es la ultima retornada
 			posicion=posicionesRetornadas[--escritoriosRetornados];
 		}
-		//sino
+		//sino, la posicion es la siguente en fila/columna
 		else{
-			//la posicion es la siguente en fila/columna
-			posicion=escritoriosOcupados;
+			posicion=escritoriosOcupados++;
 		}
 		//calcular indices
 		i=posicion/cantidadFilas;
 		j=posicion%cantidadFilas;
 		//ocupar
 		escritorios[i][j]=true;
-		escritoriosOcupados++;
 		//retorno
 		return posicion;
 	}
-	public void desocuparEscritorio(int fila,int columna){
+	public void desocuparEscritorio(int fila,int columna){//Desocupar aula
 		int posicion;
 		//desocupo
 		escritorios[fila][columna]=false;
-		escritoriosOcupados--;
 		//si la posicion desocupada no es la ultima, la guardo
 		posicion=fila*cantidadFilas+columna;
-		if(posicion!=escritoriosOcupados){
-			posicionesRetornadas[escritoriosRetornados++]=fila*cantidadFilas+columna;
+		if(posicion<escritoriosOcupados-1){
+			posicionesRetornadas[escritoriosRetornados++]=posicion;
+		}
+		//sino, decremento escritorios ocupados
+		else{
+			escritoriosOcupados--;
 		}
 	}
 	//formato de print
 	@Override
 	public String toString(){
-		return "Id: "+id+", Capacidad: "+cantidadFilas*cantidadColumnas+
+		return "Id: "+id+", Capacidad: "+escritoriosReales()+"/"+cantidadFilas*cantidadColumnas+
 				", Estado: "+((puedoOcupar())?"Hay espacio":"Esta llena");
 	}
 }
